@@ -15,7 +15,7 @@ use egsphsp::{
 
 fn main() {
     let matches = Command::new("beamdpr")
-        .version("1.0.4")
+        .version("1.0.5")
         .author("Henry B. <henry.baxter@gmail.com>")
         .about("Combine and transform egsphsp (EGS phase space) \
                 files")
