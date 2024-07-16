@@ -6,7 +6,7 @@ use std::fs::File;
 use std::path::Path;
 use std::process::exit;
 
-use clap::{App, AppSettings, Arg, SubCommand};
+use clap::{value_parser, Arg, Command};
 
 use egsphsp::PHSPReader;
 use egsphsp::{
@@ -23,200 +23,219 @@ fn floatify(s: &str) -> f32 {
 }
 
 fn main() {
-    let matches = App::new("beamdpr")
-        .version("0.2.2")
+    let matches = Command::new("beamdpr")
+        .version("1.0.3")
         .author("Henry B. <henry.baxter@gmail.com>")
         .about("Combine and transform egsphsp (EGS phase space) \
                 files")
-        .setting(AppSettings::SubcommandRequiredElseHelp)
-        .subcommand(SubCommand::with_name("print")
+        .subcommand_required(true)
+        .arg_required_else_help(true)
+        .subcommand(Command::new("print")
             .about("Print the specified fields in the specified order for n (or all) records")
-            .arg(Arg::with_name("fields")
+            .arg(Arg::new("fields")
                 .long("field")
-                .short("f")
-                .takes_value(true)
+                .short('f')
+                .value_name("FIELDS")
+                .value_parser(value_parser!(String))
                 .required(true)
-                .multiple(true))
-            .arg(Arg::with_name("number")
+                .num_args(1..))
+            .arg(Arg::new("number")
                 .long("number")
-                .short("n")
-                .takes_value(true)
+                .short('n')
+                .value_name("RECORDS")
+                .value_parser(value_parser!(String))
                 .default_value("10"))
-            .arg(Arg::with_name("input")
-                .takes_value(true)
+            .arg(Arg::new("input")
+                .value_name("FILE")
+                .value_parser(value_parser!(String))
                 .required(true)))
-        .subcommand(SubCommand::with_name("reweight")
+        .subcommand(Command::new("reweight"))
             .about("Reweight a phase space file as a function of distance from z")
-            .arg(Arg::with_name("input")
+            .arg(Arg::new("input")
                 .required(true)
-                .takes_value(true))
-            .arg(Arg::with_name("output")
+                .value_name("INPUT")
+                .value_parser(value_parser!(String)))
+            .arg(Arg::new("output")
                 .long("output")
                 .required(false)
-                .short("o")
-                .takes_value(true))
-            .arg(Arg::with_name("r")
+                .short('o')
+                .value_name("OUTPUT")
+                .value_parser(value_parser!(String)))
+            .arg(Arg::new("r")
                 .required(true)
-                .short("r")
-                .takes_value(true))
-            .arg(Arg::with_name("c")
-                .short("c")
-                .takes_value(true)
+                .short('r')
+                .value_name("RADIUS")
+                .value_parser(value_parser!(String)))
+            .arg(Arg::new("c")
+                .short('c')
+                .value_name("C")
+                .value_parser(value_parser!(String))
                 .required(true))
-            .arg(Arg::with_name("bins")
+            .arg(Arg::new("bins")
                 .long("bins")
-                .takes_value(true)
+                .value_name("BINS")
+                .value_parser(value_parser!(String))
                 .default_value("100")
-                .required(false)))
-        .subcommand(SubCommand::with_name("randomize")
+                .required(false))
+        .subcommand(Command::new("randomize"))
             .about("Randomize the order of the particles")
-            .arg(Arg::with_name("input").required(true))
-            .arg(Arg::with_name("seed")
-                .long("seed")
-                .help("Seed as an unsigned integer")
-                .default_value("0")
-                .required(false)))
-        .subcommand(SubCommand::with_name("compare")
-            .about("Compare two phase space files")
-            .arg(Arg::with_name("first").required(true))
-            .arg(Arg::with_name("second").required(true)))
-        .subcommand(SubCommand::with_name("stats")
-            .about("Stats on phase space file")
-            .arg(Arg::with_name("input").required(true))
-            .arg(Arg::with_name("format")
-                .default_value("human")
-                .possible_values(&["human", "json"])
-                .long("format")
-                .takes_value(true)
-                .help("Output stats in json or human format")))
-        .subcommand(SubCommand::with_name("combine")
-            .about("Combine phase space from one or more input files into outputfile - does not \
-                    adjust weights")
-            .arg(Arg::with_name("input")
-                .required(true)
-                .multiple(true))
-            .arg(Arg::with_name("output")
-                .short("o")
-                .long("output")
-                .takes_value(true)
-                .required(true))
-            .arg(Arg::with_name("delete")
-                .short("d")
-                .long("delete")
-                .help("Delete input files as they are used (no going back!)")))
-        .subcommand(SubCommand::with_name("sample-combine")
-            .about("Combine samples of phase space inputs files into outputfile - does not \
-                    adjust weights")
-            .arg(Arg::with_name("input")
-                .required(true)
-                .multiple(true))
-            .arg(Arg::with_name("output")
-                .short("o")
-                .long("output")
-                .takes_value(true)
-                .required(true))
-            .arg(Arg::with_name("seed")
+            .arg(Arg::new("input").required(true))
+            .arg(Arg::new("seed")
                 .long("seed")
                 .help("Seed as an unsigned integer")
                 .default_value("0")
                 .required(false))
-            .arg(Arg::with_name("rate")
+        .subcommand(Command::new("compare")
+            .about("Compare two phase space files")
+            .arg(Arg::new("first").required(true))
+            .arg(Arg::new("second").required(true)))
+        .subcommand(Command::new("stats")
+            .about("Stats on phase space file")
+            .arg(Arg::new("input").required(true))
+            .arg(Arg::new("format")
+                .default_value("human")
+                .value_parser(["human", "json"])
+                .long("format")
+                .help("Output stats in json or human format")))
+        .subcommand(Command::new("combine")
+            .about("Combine phase space from one or more input files into outputfile - does not \
+                    adjust weights")
+            .arg(Arg::new("input")
+                .required(true)
+                .num_args(1..))
+            .arg(Arg::new("output")
+                .short('o')
+                .long("output")
+                .value_name("OUTPUT")
+                .value_parser(value_parser!(String))
+                .required(true))
+            .arg(Arg::new("delete")
+                .short('d')
+                .long("delete")
+                .help("Delete input files as they are used (no going back!)")))
+        .subcommand(Command::new("sample-combine")
+            .about("Combine samples of phase space inputs files into outputfile - does not \
+                    adjust weights")
+            .arg(Arg::new("input")
+                .required(true)
+                .num_args(1..))
+            .arg(Arg::new("output")
+                .short('o')
+                .long("output")
+                .value_parser(value_parser!(String))
+                .required(true))
+            .arg(Arg::new("seed")
+                .long("seed")
+                .help("Seed as an unsigned integer")
+                .default_value("0")
+                .required(false))
+            .arg(Arg::new("rate")
                 .default_value("10")
                 .required(false)
                 .long("rate")
-                .takes_value(true)
+                .value_name("RATE")
+                .value_parser(value_parser!(String))
                 .help("Inverse sample rate - 10 means take roughly 1 out of every 10 particles")))
-        .subcommand(SubCommand::with_name("translate")
+        .subcommand(Command::new("translate")
             .about("Translate using X and Y in centimeters. Use parantheses around negatives.")
-            .arg(Arg::with_name("in-place")
-                .short("i")
+            .arg(Arg::new("in-place")
+                .short('i')
                 .long("in-place")
                 .help("Transform input file in-place"))
-            .arg(Arg::with_name("x")
-                .short("x")
-                .takes_value(true)
-                .required_unless("y")
+            .arg(Arg::new("x")
+                .short('x')
+                .value_name("X")
+                .value_parser(value_parser!(String))
+                .required_unless_present("y")
                 .default_value("0"))
-            .arg(Arg::with_name("y")
-                .short("y")
-                .takes_value(true)
-                .required_unless("x")
+            .arg(Arg::new("y")
+                .short('y')
+                .value_name("Y")
+                .value_parser(value_parser!(String))
+                .required_unless_present("x")
                 .default_value("0"))
-            .arg(Arg::with_name("input")
+            .arg(Arg::new("input")
                 .help("Phase space file")
                 .required(true))
-            .arg(Arg::with_name("output")
+            .arg(Arg::new("output")
                 .help("Output file")
-                .required_unless("in-place")))
-        .subcommand(SubCommand::with_name("rotate")
+                .required_unless_present("in-place")))
+        .subcommand(Command::new("rotate")
             .about("Rotate by --angle radians counter clockwise around z axis. Use parantheses \
                     around negatives.")
-            .arg(Arg::with_name("in-place")
-                .short("i")
+            .arg(Arg::new("in-place")
+                .short('i')
                 .long("in-place")
                 .help("Transform input file in-place"))
-            .arg(Arg::with_name("angle")
-                .short("a")
+            .arg(Arg::new("angle")
+                .short('a')
                 .long("angle")
-                .takes_value(true)
+                .value_name("ANGLE")
+                .value_parser(value_parser!(String))
                 .required(true)
                 .help("Counter clockwise angle in radians to rotate around Z axis"))
-            .arg(Arg::with_name("input")
+            .arg(Arg::new("input")
                 .help("Phase space file")
                 .required(true))
-            .arg(Arg::with_name("output")
+            .arg(Arg::new("output")
                 .help("Output file")
-                .required_unless("in-place")))
-        .subcommand(SubCommand::with_name("reflect")
+                .required_unless_present("in-place")))
+        .subcommand(Command::new("reflect")
             .about("Reflect in vector specified with -x and -y. Use parantheses around \
                     negatives.")
-            .arg(Arg::with_name("in-place")
-                .short("i")
+            .arg(Arg::new("in-place")
+                .short('i')
                 .long("in-place")
                 .help("Transform input file in-place"))
-            .arg(Arg::with_name("x")
-                .short("x")
-                .takes_value(true)
-                .required_unless("x")
+            .arg(Arg::new("x")
+                .short('x')
+                .value_name("X")
+                .value_parser(value_parser!(String))
+                .required_unless_present("x")
                 .default_value("0"))
-            .arg(Arg::with_name("y")
-                .short("y")
-                .takes_value(true)
-                .required_unless("y")
+            .arg(Arg::new("y")
+                .short('y')
+                .value_name("Y")
+                .value_parser(value_parser!(String))
+                .required_unless_present("y")
                 .default_value("0"))
-            .arg(Arg::with_name("input")
+            .arg(Arg::new("input")
                 .help("Phase space file")
                 .required(true))
-            .arg(Arg::with_name("output")
+            .arg(Arg::new("output")
                 .help("Output file")
-                .required_unless("in-place")))
+                .required_unless_present("in-place")))
         .get_matches();
     let subcommand = matches.subcommand_name().unwrap();
     let result = if subcommand == "combine" {
         // println!("combine");
         let sub_matches = matches.subcommand_matches("combine").unwrap();
         let input_paths: Vec<&Path> = sub_matches
-            .values_of("input")
+            .get_many::<String>("input")
             .unwrap()
-            .map(|s| Path::new(s))
+            .map(|s: &_| Path::new(s))
             .collect();
-        let output_path = Path::new(sub_matches.value_of("output").unwrap());
+        let output_path = Path::new(sub_matches.get_one::<String>("output").unwrap());
         println!(
             "combine {} files into {}",
             input_paths.len(),
             output_path.display()
         );
-        combine(&input_paths, output_path, sub_matches.is_present("delete"))
+        combine(&input_paths, output_path, sub_matches.contains_id("delete"))
     } else if subcommand == "print" {
         // prints the fields specified?
         let sub_matches = matches.subcommand_matches("print").unwrap();
-        let input_path = Path::new(sub_matches.value_of("input").unwrap());
+        let input_path = Path::new(sub_matches.get_one::<String>("input").unwrap());
         let number = sub_matches
-            .value_of("number")
+            .get_one::<String>("number")
             .unwrap()
             .parse::<usize>()
             .unwrap();
-        let fields: Vec<&str> = sub_matches.values_of("fields").unwrap().collect();
+        let fields: Vec<&str> = sub_matches
+            .get_many::<String>("fields")
+            .unwrap()
+            .map(|s| s.as_str())
+            .collect();
         let file = File::open(input_path).unwrap();
         let reader = PHSPReader::from(file).unwrap();
         for field in fields.iter() {
@@ -248,19 +267,19 @@ fn main() {
         println!("unwrapping subcommand");
         let sub_matches = matches.subcommand_matches("reweight").unwrap();
         println!("unwrapping input_path");
-        let input_path = Path::new(sub_matches.value_of("input").unwrap());
+        let input_path = Path::new(sub_matches.get_one::<String>("input").unwrap());
         println!("unwrapping output_path");
-        let output_path = if sub_matches.is_present("output") {
-            Path::new(sub_matches.value_of("output").unwrap())
+        let output_path = if sub_matches.contains_id("output") {
+            Path::new(sub_matches.get_one::<String>("output").unwrap())
         } else {
             input_path
         };
         println!("unwrapping c");
-        let c = floatify(sub_matches.value_of("c").unwrap());
+        let c = floatify(sub_matches.get_one::<String>("c").unwrap());
         println!("unwrapping r");
-        let r = floatify(sub_matches.value_of("r").unwrap());
+        let r = floatify(sub_matches.get_one::<String>("r").unwrap());
         let bins = sub_matches
-            .value_of("bins")
+            .get_one::<String>("bins")
             .unwrap()
             .parse::<usize>()
             .unwrap();
@@ -268,19 +287,19 @@ fn main() {
     } else if subcommand == "sample-combine" {
         let sub_matches = matches.subcommand_matches("sample-combine").unwrap();
         let input_paths: Vec<&Path> = sub_matches
-            .values_of("input")
+            .get_many::<String>("input")
             .unwrap()
             .map(|s| Path::new(s))
             .collect();
-        let output_path = Path::new(sub_matches.value_of("output").unwrap());
+        let output_path = Path::new(sub_matches.get_one::<String>("output").unwrap());
         let rate = 1.0
             / sub_matches
-                .value_of("rate")
+                .get_one::<String>("rate")
                 .unwrap()
                 .parse::<f64>()
                 .unwrap();
         let seed = sub_matches
-            .value_of("seed")
+            .get_one::<String>("seed")
             .unwrap()
             .parse::<u64>()
             .unwrap();
@@ -293,9 +312,9 @@ fn main() {
         sample_combine(&input_paths, output_path, rate, seed)
     } else if subcommand == "randomize" {
         let sub_matches = matches.subcommand_matches("randomize").unwrap();
-        let path = Path::new(sub_matches.value_of("input").unwrap());
+        let path = Path::new(sub_matches.get_one::<String>("input").unwrap());
         let seed = sub_matches
-            .value_of("seed")
+            .get_one::<String>("seed")
             .unwrap()
             .parse::<u64>()
             .unwrap();
@@ -304,12 +323,12 @@ fn main() {
         // now we're going to print the header information of each
         // and then we're going to return a return code
         let sub_matches = matches.subcommand_matches("compare").unwrap();
-        let path1 = Path::new(sub_matches.value_of("first").unwrap());
-        let path2 = Path::new(sub_matches.value_of("second").unwrap());
+        let path1 = Path::new(sub_matches.get_one::<String>("first").unwrap());
+        let path2 = Path::new(sub_matches.get_one::<String>("second").unwrap());
         compare(path1, path2)
     } else if subcommand == "stats" {
         let sub_matches = matches.subcommand_matches("stats").unwrap();
-        let path = Path::new(sub_matches.value_of("input").unwrap());
+        let path = Path::new(sub_matches.get_one::<String>("input").unwrap());
         let reader = PHSPReader::from(File::open(path).unwrap()).unwrap();
         let header = reader.header;
         // let mut max_x = f32::MIN;
@@ -323,7 +342,7 @@ fn main() {
         // min_y = min_y.min(record.y_cm);
         // }
 
-        if sub_matches.value_of("format").unwrap() == "json" {
+        if sub_matches.get_one::<String>("format").unwrap() == "json" {
             // TODO use a proper serializer!
             println!("{{");
             println!("\t\"total_particles\": {},", header.total_particles);
@@ -361,14 +380,14 @@ fn main() {
             "translate" => {
                 // println!("translate");
                 let sub_matches = matches.subcommand_matches("translate").unwrap();
-                let x = floatify(sub_matches.value_of("x").unwrap());
-                let y = floatify(sub_matches.value_of("y").unwrap());
-                let input_path = Path::new(sub_matches.value_of("input").unwrap());
-                if sub_matches.is_present("in-place") {
+                let x = floatify(sub_matches.get_one::<String>("x").unwrap());
+                let y = floatify(sub_matches.get_one::<String>("y").unwrap());
+                let input_path = Path::new(sub_matches.get_one::<String>("input").unwrap());
+                if sub_matches.contains_id("in-place") {
                     println!("translate {} by ({}, {})", input_path.display(), x, y);
                     translate(input_path, input_path, x, y)
                 } else {
-                    let output_path = Path::new(sub_matches.value_of("output").unwrap());
+                    let output_path = Path::new(sub_matches.get_one::<String>("output").unwrap());
                     println!(
                         "translate {} by ({}, {}) and write to {}",
                         input_path.display(),
@@ -382,15 +401,15 @@ fn main() {
             "reflect" => {
                 // println!("reflect");
                 let sub_matches = matches.subcommand_matches("reflect").unwrap();
-                let x = floatify(sub_matches.value_of("x").unwrap());
-                let y = floatify(sub_matches.value_of("y").unwrap());
+                let x = floatify(sub_matches.get_one::<String>("x").unwrap());
+                let y = floatify(sub_matches.get_one::<String>("y").unwrap());
                 Transform::reflection(&mut matrix, x, y);
-                let input_path = Path::new(sub_matches.value_of("input").unwrap());
-                if sub_matches.is_present("in-place") {
+                let input_path = Path::new(sub_matches.get_one::<String>("input").unwrap());
+                if sub_matches.contains_id("in-place") {
                     println!("reflect {} around ({}, {})", input_path.display(), x, y);
                     transform(input_path, input_path, &matrix)
                 } else {
-                    let output_path = Path::new(sub_matches.value_of("output").unwrap());
+                    let output_path = Path::new(sub_matches.get_one::<String>("output").unwrap());
                     println!(
                         "reflect {} around ({}, {}) and write to {}",
                         input_path.display(),
@@ -404,14 +423,14 @@ fn main() {
             "rotate" => {
                 // println!("rotate");
                 let sub_matches = matches.subcommand_matches("rotate").unwrap();
-                let angle = floatify(sub_matches.value_of("angle").unwrap());
+                let angle = floatify(sub_matches.get_one::<String>("angle").unwrap());
                 Transform::rotation(&mut matrix, angle);
-                let input_path = Path::new(sub_matches.value_of("input").unwrap());
-                if sub_matches.is_present("in-place") {
+                let input_path = Path::new(sub_matches.get_one::<String>("input").unwrap());
+                if sub_matches.contains_id("in-place") {
                     println!("rotate {} by {} radians", input_path.display(), angle);
                     transform(input_path, input_path, &matrix)
                 } else {
-                    let output_path = Path::new(sub_matches.value_of("output").unwrap());
+                    let output_path = Path::new(sub_matches.get_one::<String>("output").unwrap());
                     println!(
                         "rotate {} by {} radians and write to {}",
                         input_path.display(),
