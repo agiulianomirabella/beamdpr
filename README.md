@@ -125,7 +125,7 @@ And there you have it:
 
 ```
 
-**NOTE:** Negative numbers must have parantheses around them. You may omit an argument if you only want to translate in one direction.
+**NOTE:** You may omit an argument if you only want to translate in one direction.
 
 ## Rotate
 
@@ -201,7 +201,7 @@ Reflect in the vector (-1, 0) in-place:
 
 ```
 
-**NOTE:** Negative numbers are input using parantheses, and `-i` is the same as `--in-place`.
+**NOTE:** The flag `-i` is the same as `--in-place`.
 
 ## Delete after reading
 
