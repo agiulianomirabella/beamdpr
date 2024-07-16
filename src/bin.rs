@@ -24,7 +24,7 @@ fn floatify(s: &str) -> f32 {
 
 fn main() {
     let matches = Command::new("beamdpr")
-        .version("1.0.3")
+        .version("1.0.4")
         .author("Henry B. <henry.baxter@gmail.com>")
         .about("Combine and transform egsphsp (EGS phase space) \
                 files")
