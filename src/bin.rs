@@ -13,15 +13,6 @@ use egsphsp::{
     combine, compare, randomize, reweight, sample_combine, transform, translate, Transform,
 };
 
-fn floatify(s: &str) -> f32 {
-    s.trim()
-        .trim_start_matches("(")
-        .trim_end_matches(")")
-        .trim()
-        .parse::<f32>()
-        .unwrap()
-}
-
 fn main() {
     let matches = Command::new("beamdpr")
         .version("1.0.4")
@@ -65,11 +56,11 @@ fn main() {
                 .required(true)
                 .short('r')
                 .value_name("RADIUS")
-                .value_parser(value_parser!(String)))
+                .value_parser(value_parser!(f32)))
             .arg(Arg::new("c")
                 .short('c')
-                .value_name("C")
-                .value_parser(value_parser!(String))
+                .value_name("CONSTANT")
+                .value_parser(value_parser!(f32))
                 .required(true))
             .arg(Arg::new("bins")
                 .long("bins")
@@ -176,7 +167,7 @@ fn main() {
                 .short('a')
                 .long("angle")
                 .value_name("ANGLE")
-                .value_parser(value_parser!(String))
+                .value_parser(value_parser!(f32))
                 .required(true)
                 .help("Counter clockwise angle in radians to rotate around Z axis"))
             .arg(Arg::new("input")
@@ -287,9 +278,9 @@ fn main() {
             input_path
         };
         println!("unwrapping c");
-        let c = floatify(sub_matches.get_one::<String>("c").unwrap());
+        let c = *sub_matches.get_one::<f32>("c").unwrap();
         println!("unwrapping r");
-        let r = floatify(sub_matches.get_one::<String>("r").unwrap());
+        let r = *sub_matches.get_one::<f32>("r").unwrap();
         let bins = sub_matches
             .get_one::<String>("bins")
             .unwrap()
@@ -435,7 +426,7 @@ fn main() {
             "rotate" => {
                 // println!("rotate");
                 let sub_matches = matches.subcommand_matches("rotate").unwrap();
-                let angle = floatify(sub_matches.get_one::<String>("angle").unwrap());
+                let angle = *sub_matches.get_one::<f32>("angle").unwrap();
                 Transform::rotation(&mut matrix, angle);
                 let input_path = Path::new(sub_matches.get_one::<String>("input").unwrap());
                 if *sub_matches.get_one::<bool>("in-place").unwrap() {
