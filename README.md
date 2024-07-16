@@ -112,7 +112,7 @@ Now translate it 23 in the x direction and -5.7 in the y:
 
 ```
 
-    $ beamdpr translate first.egsphsp1 translated.egsphsp1 -x 23 -y (-5.7)
+    $ beamdpr translate first.egsphsp1 translated.egsphsp1 -x 23 -y -5.7
 
 ```
 
@@ -196,7 +196,7 @@ Reflect in the vector (-1, 0) in-place:
 
 ```
 
-    $ beamdpr rotate first.egsphsp1 -i -x (-1)
+    $ beamdpr rotate first.egsphsp1 -i -x -1
 
 
 ```

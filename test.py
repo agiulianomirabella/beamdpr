@@ -53,7 +53,7 @@ class BinTestCase(TestCase):
         )
         self.assertEqual(result.returncode, 0)
         result = run(
-            ["cargo", "run", "--", "translate", "-i", output_file, "-x", "(-10)"]
+            ["cargo", "run", "--", "translate", "-i", output_file, "-x", "-10"]
         )
         self.assertEqual(result.returncode, 0)
         result = run(
@@ -99,7 +99,7 @@ class BinTestCase(TestCase):
             ["cargo", "run", "--", "reflect", input_file, output_file, "-x", "1"]
         )
         self.assertEqual(result.returncode, 0)
-        result = run(["cargo", "run", "--", "reflect", "-i", output_file, "-x", "(-1)"])
+        result = run(["cargo", "run", "--", "reflect", "-i", output_file, "-x", "-1"])
         self.assertEqual(result.returncode, 0)
         result = run(
             ["cargo", "run", "--", "compare", input_file, output_file],

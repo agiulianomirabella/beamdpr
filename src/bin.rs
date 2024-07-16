@@ -147,13 +147,15 @@ fn main() {
             .arg(Arg::new("x")
                 .short('x')
                 .value_name("X")
-                .value_parser(value_parser!(String))
+                .value_parser(clap::value_parser!(f32))
+                .allow_hyphen_values(true)
                 .required_unless_present("y")
                 .default_value("0"))
             .arg(Arg::new("y")
                 .short('y')
                 .value_name("Y")
-                .value_parser(value_parser!(String))
+                .value_parser(clap::value_parser!(f32))
+                .allow_hyphen_values(true)
                 .required_unless_present("x")
                 .default_value("0"))
             .arg(Arg::new("input")
@@ -194,13 +196,15 @@ fn main() {
             .arg(Arg::new("x")
                 .short('x')
                 .value_name("X")
-                .value_parser(value_parser!(String))
+                .value_parser(clap::value_parser!(f32))
+                .allow_hyphen_values(true)
                 .required_unless_present("y")
                 .default_value("0"))
             .arg(Arg::new("y")
                 .short('y')
                 .value_name("Y")
-                .value_parser(value_parser!(String))
+                .value_parser(clap::value_parser!(f32))
+                .allow_hyphen_values(true)
                 .required_unless_present("x")
                 .default_value("0"))
             .arg(Arg::new("input")
@@ -388,8 +392,8 @@ fn main() {
             "translate" => {
                 // println!("translate");
                 let sub_matches = matches.subcommand_matches("translate").unwrap();
-                let x = floatify(sub_matches.get_one::<String>("x").unwrap());
-                let y = floatify(sub_matches.get_one::<String>("y").unwrap());
+                let x = *sub_matches.get_one::<f32>("x").unwrap();
+                let y = *sub_matches.get_one::<f32>("y").unwrap();
                 let input_path = Path::new(sub_matches.get_one::<String>("input").unwrap());
                 if sub_matches.get_flag("in-place") {
                     println!("translate {} by ({}, {})", input_path.display(), x, y);
@@ -409,8 +413,8 @@ fn main() {
             "reflect" => {
                 // println!("reflect");
                 let sub_matches = matches.subcommand_matches("reflect").unwrap();
-                let x = floatify(sub_matches.get_one::<String>("x").unwrap());
-                let y = floatify(sub_matches.get_one::<String>("y").unwrap());
+                let x = *sub_matches.get_one::<f32>("x").unwrap();
+                let y = *sub_matches.get_one::<f32>("y").unwrap();
                 Transform::reflection(&mut matrix, x, y);
                 let input_path = Path::new(sub_matches.get_one::<String>("input").unwrap());
                 if sub_matches.get_flag("in-place") {
