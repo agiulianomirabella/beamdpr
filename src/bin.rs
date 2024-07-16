@@ -49,7 +49,7 @@ fn main() {
                 .value_name("FILE")
                 .value_parser(value_parser!(String))
                 .required(true)))
-        .subcommand(Command::new("reweight"))
+        .subcommand(Command::new("reweight")
             .about("Reweight a phase space file as a function of distance from z")
             .arg(Arg::new("input")
                 .required(true)
@@ -76,15 +76,15 @@ fn main() {
                 .value_name("BINS")
                 .value_parser(value_parser!(String))
                 .default_value("100")
-                .required(false))
-        .subcommand(Command::new("randomize"))
+                .required(false)))
+        .subcommand(Command::new("randomize")
             .about("Randomize the order of the particles")
             .arg(Arg::new("input").required(true))
             .arg(Arg::new("seed")
                 .long("seed")
                 .help("Seed as an unsigned integer")
                 .default_value("0")
-                .required(false))
+                .required(false)))
         .subcommand(Command::new("compare")
             .about("Compare two phase space files")
             .arg(Arg::new("first").required(true))
@@ -112,7 +112,8 @@ fn main() {
             .arg(Arg::new("delete")
                 .short('d')
                 .long("delete")
-                .help("Delete input files as they are used (no going back!)")))
+                .help("Delete input files as they are used (no going back!)")
+                .action(clap::ArgAction::SetTrue)))
         .subcommand(Command::new("sample-combine")
             .about("Combine samples of phase space inputs files into outputfile - does not \
                     adjust weights")
@@ -141,7 +142,8 @@ fn main() {
             .arg(Arg::new("in-place")
                 .short('i')
                 .long("in-place")
-                .help("Transform input file in-place"))
+                .help("Transform input file in-place")
+                .action(clap::ArgAction::SetTrue))
             .arg(Arg::new("x")
                 .short('x')
                 .value_name("X")
@@ -166,7 +168,8 @@ fn main() {
             .arg(Arg::new("in-place")
                 .short('i')
                 .long("in-place")
-                .help("Transform input file in-place"))
+                .help("Transform input file in-place")
+                .action(clap::ArgAction::SetTrue))
             .arg(Arg::new("angle")
                 .short('a')
                 .long("angle")
@@ -186,18 +189,19 @@ fn main() {
             .arg(Arg::new("in-place")
                 .short('i')
                 .long("in-place")
-                .help("Transform input file in-place"))
+                .help("Transform input file in-place")
+                .action(clap::ArgAction::SetTrue))
             .arg(Arg::new("x")
                 .short('x')
                 .value_name("X")
                 .value_parser(value_parser!(String))
-                .required_unless_present("x")
+                .required_unless_present("y")
                 .default_value("0"))
             .arg(Arg::new("y")
                 .short('y')
                 .value_name("Y")
                 .value_parser(value_parser!(String))
-                .required_unless_present("y")
+                .required_unless_present("x")
                 .default_value("0"))
             .arg(Arg::new("input")
                 .help("Phase space file")
@@ -221,7 +225,11 @@ fn main() {
             input_paths.len(),
             output_path.display()
         );
-        combine(&input_paths, output_path, sub_matches.contains_id("delete"))
+        combine(
+            &input_paths,
+            output_path,
+            *sub_matches.get_one::<bool>("delete").unwrap(),
+        )
     } else if subcommand == "print" {
         // prints the fields specified?
         let sub_matches = matches.subcommand_matches("print").unwrap();
@@ -383,7 +391,7 @@ fn main() {
                 let x = floatify(sub_matches.get_one::<String>("x").unwrap());
                 let y = floatify(sub_matches.get_one::<String>("y").unwrap());
                 let input_path = Path::new(sub_matches.get_one::<String>("input").unwrap());
-                if sub_matches.contains_id("in-place") {
+                if sub_matches.get_flag("in-place") {
                     println!("translate {} by ({}, {})", input_path.display(), x, y);
                     translate(input_path, input_path, x, y)
                 } else {
@@ -405,7 +413,7 @@ fn main() {
                 let y = floatify(sub_matches.get_one::<String>("y").unwrap());
                 Transform::reflection(&mut matrix, x, y);
                 let input_path = Path::new(sub_matches.get_one::<String>("input").unwrap());
-                if sub_matches.contains_id("in-place") {
+                if sub_matches.get_flag("in-place") {
                     println!("reflect {} around ({}, {})", input_path.display(), x, y);
                     transform(input_path, input_path, &matrix)
                 } else {
@@ -426,7 +434,7 @@ fn main() {
                 let angle = floatify(sub_matches.get_one::<String>("angle").unwrap());
                 Transform::rotation(&mut matrix, angle);
                 let input_path = Path::new(sub_matches.get_one::<String>("input").unwrap());
-                if sub_matches.contains_id("in-place") {
+                if *sub_matches.get_one::<bool>("in-place").unwrap() {
                     println!("rotate {} by {} radians", input_path.display(), angle);
                     transform(input_path, input_path, &matrix)
                 } else {

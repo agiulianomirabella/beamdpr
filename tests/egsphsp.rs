@@ -29,42 +29,42 @@ fn first_file_header_correct() {
     assert!(reader.header.record_size == 28);
     assert!(
         reader.header.total_particles == 9345,
-        format!(
+        
             "Total particles incorrect, found {:?}",
             reader.header.total_particles
-        )
+        
     );
     assert!(
         reader.header.total_particles_in_source == 10000.0,
-        format!(
+        
             "Total particles in source incorrect, expected {:?} but found {:?}",
             10000.00, reader.header.total_particles_in_source
-        )
+        
     );
     assert!(
         reader.header.total_photons == 8190,
-        format!(
+        
             "Total photons incorrect, found {:?}",
             reader.header.total_photons
-        )
+        
     );
     assert!(
         reader.header.max_energy.approx_eq_ulps(&0.19944459, 2),
-        format!("Max energy incorrect, found {:?}", reader.header.max_energy)
+        "Max energy incorrect, found {:?}", reader.header.max_energy
     );
     assert!(
         reader.header.min_energy.approx_eq_ulps(&0.012462342, 2),
-        format!("Min energy incorrect, found {:?}", reader.header.min_energy)
+        "Min energy incorrect, found {:?}", reader.header.min_energy
     );
     assert!(
         reader
             .header
             .total_particles_in_source
             .approx_eq_ulps(&(10000.0 as f32), 2),
-        format!(
+        
             "Total particles in source incorrect, found {:?}",
             reader.header.total_particles_in_source
-        )
+        
     );
 }
 
@@ -75,42 +75,42 @@ fn second_file_header_correct() {
     assert!(reader.header.record_size == 28);
     assert!(
         reader.header.total_particles == 9345,
-        format!(
+        
             "Total particles incorrect, found {:?}, header.total_particles",
             reader.header.total_particles
-        )
+        
     );
     assert!(
         reader.header.total_particles_in_source == 10000.0,
-        format!(
+        
             "Total particles in source incorrect, expected {:?} but found {:?}",
             10000.00, reader.header.total_particles_in_source
-        )
+        
     );
     assert!(
         reader.header.total_photons == 8190,
-        format!(
+        
             "Total photons incorrect, found {:?}",
             reader.header.total_photons
-        )
+        
     );
     assert!(
         reader.header.max_energy.approx_eq_ulps(&0.19944459, 2),
-        format!("Max energy incorrect, found {:?}", reader.header.max_energy)
+        "Max energy incorrect, found {:?}", reader.header.max_energy
     );
     assert!(
         reader.header.min_energy.approx_eq_ulps(&0.012462342, 2),
-        format!("Min energy incorrect, found {:?}", reader.header.min_energy)
+        "Min energy incorrect, found {:?}", reader.header.min_energy
     );
     assert!(
         reader
             .header
             .total_particles_in_source
             .approx_eq_ulps(&(10000.0 as f32), 2),
-        format!(
+        
             "Total particles in source incorrect, found {:?}",
             reader.header.total_particles_in_source
-        )
+        
     );
 }
 
@@ -121,35 +121,35 @@ fn combined_file_header_correct() {
     assert!(reader.header.record_size == 28);
     assert!(
         reader.header.total_particles == 9345 * 2,
-        format!(
+        
             "Total particles incorrect, found {:?}, header.total_particles",
             reader.header.total_particles
-        )
+        
     );
     assert!(
         reader.header.total_photons == 8190 * 2,
-        format!(
+        
             "Total photons incorrect, found {:?}",
             reader.header.total_photons
-        )
+        
     );
     assert!(
         reader.header.max_energy.approx_eq_ulps(&0.19944459, 2),
-        format!("Max energy incorrect, found {:?}", reader.header.max_energy)
+        "Max energy incorrect, found {:?}", reader.header.max_energy
     );
     assert!(
         reader.header.min_energy.approx_eq_ulps(&0.012462342, 2),
-        format!("Min energy incorrect, found {:?}", reader.header.min_energy)
+        "Min energy incorrect, found {:?}", reader.header.min_energy
     );
     assert!(
         reader
             .header
             .total_particles_in_source
             .approx_eq_ulps(&(10000.0 * 2.0 as f32), 2),
-        format!(
+        
             "Total particles in source incorrect, found {:?}",
             reader.header.total_particles_in_source
-        )
+        
     );
 }
 
@@ -194,17 +194,17 @@ fn combine_samples() {
     let expected_in_source = 10000.0 * 2.0 / 10.0;
     assert!(
         (reader.header.total_particles - expected).abs() < 100,
-        format!(
+        
             "expected {} particles but found {}",
             expected, reader.header.total_particles
-        )
+        
     );
     assert!(
         (reader.header.total_particles_in_source - expected_in_source as f32) < 100 as f32,
-        format!(
+        
             "expected {} particles in source but found {}",
             expected_in_source, reader.header.total_particles_in_source
-        )
+        
     )
 }
 
@@ -254,25 +254,25 @@ fn translate_operation() {
         let expected_y_cos = irecord.y_cos;
         assert!(
             orecord.x_cm.approx_eq_ulps(&expected_x, 2),
-            format!("Expected x {:?}, found {:?}", expected_x, orecord.x_cm)
+            "Expected x {:?}, found {:?}", expected_x, orecord.x_cm
         );
         assert!(
             orecord.y_cm.approx_eq_ulps(&expected_y, 2),
-            format!("Expected y {:?}, found {:?}", expected_y, orecord.y_cm)
+            "Expected y {:?}, found {:?}", expected_y, orecord.y_cm
         );
         assert!(
             orecord.x_cos.approx_eq_ulps(&expected_x_cos, 2),
-            format!(
+            
                 "Expected x cos {:?}, found {:?}",
                 expected_x_cos, orecord.x_cos
-            )
+            
         );
         assert!(
             orecord.y_cos.approx_eq_ulps(&expected_y_cos, 2),
-            format!(
+            
                 "Expected y cos {:?}, found {:?}",
                 expected_y_cos, orecord.y_cos
-            )
+            
         );
     }
     translate(output_path, output_path, x, y).unwrap();
