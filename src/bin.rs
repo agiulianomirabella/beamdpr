@@ -15,7 +15,7 @@ use egsphsp::{
 
 fn main() {
     let matches = Command::new("beamdpr")
-        .version("1.0.5")
+        .version("1.0.6")
         .author("Henry B. <henry.baxter@gmail.com>")
         .about("Combine and transform egsphsp (EGS phase space) \
                 files")
@@ -56,11 +56,13 @@ fn main() {
                 .required(true)
                 .short('r')
                 .value_name("RADIUS")
-                .value_parser(value_parser!(f32)))
+                .value_parser(value_parser!(f32))
+                .allow_hyphen_values(true))
             .arg(Arg::new("c")
                 .short('c')
                 .value_name("CONSTANT")
                 .value_parser(value_parser!(f32))
+                .allow_hyphen_values(true)
                 .required(true))
             .arg(Arg::new("bins")
                 .long("bins")
@@ -168,6 +170,7 @@ fn main() {
                 .long("angle")
                 .value_name("ANGLE")
                 .value_parser(value_parser!(f32))
+                .allow_hyphen_values(true)
                 .required(true)
                 .help("Counter clockwise angle in radians to rotate around Z axis"))
             .arg(Arg::new("input")
