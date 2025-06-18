@@ -259,6 +259,7 @@ fn main() {
                     &"y_cos" => print!("{:<16}", record.y_cos),
                     &"produced" => print!("{:<16}", record.bremsstrahlung_or_annihilation()),
                     &"charged" => print!("{:<16}", record.charged()),
+                    &"latch" => print!("{:<16}", record.latch),
                     &"r" => print!(
                         "{:<16}",
                         (record.x_cm * record.x_cm + record.y_cm * record.y_cm).sqrt()
