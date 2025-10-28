@@ -3,7 +3,7 @@ extern crate float_cmp;
 extern crate rand;
 
 use std::fmt;
-use std::fs::{remove_file, File, OpenOptions};
+use std::fs::{File, OpenOptions, remove_file};
 use std::io;
 use std::io::prelude::*;
 use std::io::{BufReader, BufWriter};
@@ -11,7 +11,7 @@ use std::path::Path;
 
 use byteorder::{ByteOrder, LittleEndian};
 use float_cmp::ApproxEqUlps;
-use rand::{rngs::StdRng, seq::SliceRandom, Rng, SeedableRng};
+use rand::{Rng, SeedableRng, rngs::StdRng, seq::SliceRandom};
 
 const HEADER_LENGTH: usize = 25;
 const MAX_RECORD_LENGTH: usize = 32;

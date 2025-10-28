@@ -3,15 +3,15 @@ extern crate egsphsp;
 
 use std::f32;
 use std::fs::File;
+use std::io::{self, Write};
 use std::path::Path;
 use std::process::exit;
-use serde_json::json;
 
-use clap::{value_parser, Arg, Command};
+use clap::{Arg, Command, value_parser};
 
 use egsphsp::PHSPReader;
 use egsphsp::{
-    combine, compare, randomize, reweight, sample_combine, transform, translate, Transform,
+    Transform, combine, compare, randomize, reweight, sample_combine, transform, translate,
 };
 
 fn main() {
@@ -238,30 +238,25 @@ fn main() {
             .unwrap()
             .parse::<usize>()
             .unwrap();
-        let fields: Vec<&str> = sub_matches
+        let _fields: Vec<&str> = sub_matches
             .get_many::<String>("fields")
             .unwrap()
             .map(|s| s.as_str())
             .collect();
         let file = File::open(input_path).unwrap();
         let reader = PHSPReader::from(file).unwrap();
-        for field in fields.iter() {
-            print!("{:<16}", field);
-        }
-        println!("");
+        let mut stdout = io::stdout().lock();
         for record in reader.take(number) {
             let r = record.unwrap();
-            let obj = json!({
-                "energy":  r.total_energy(),
-                "x":       r.x_cm,
-                "y":       r.y_cm,
-                "x_cos":   r.x_cos,
-                "y_cos":   r.y_cos,
-                "weight":  r.get_weight(),
-                "latch":   r.latch,
-            });
-            println!("{}", obj);
+            stdout.write_all(&r.total_energy().to_le_bytes()).unwrap();
+            stdout.write_all(&r.x_cm.to_le_bytes()).unwrap();
+            stdout.write_all(&r.y_cm.to_le_bytes()).unwrap();
+            stdout.write_all(&r.x_cos.to_le_bytes()).unwrap();
+            stdout.write_all(&r.y_cos.to_le_bytes()).unwrap();
+            stdout.write_all(&r.get_weight().to_le_bytes()).unwrap();
+            stdout.write_all(&(r.latch as i32).to_le_bytes()).unwrap();
         }
+        stdout.flush().unwrap();
         Ok(())
     } else if subcommand == "reweight" {
         println!("unwrapping subcommand");
