@@ -18,6 +18,9 @@ const MAX_RECORD_LENGTH: usize = 32;
 const BUFFER_CAPACITY: usize = 1 * 1024 * 1024;
 const MODE_LENGTH: usize = 5;
 const BATCHES: usize = 128; // too high and one hits ulimit (around 1024)
+const POSITRON_BIT: u32 = 1u32 << 29;
+const ELECTRON_BIT: u32 = 1u32 << 30;
+const NPASS_BIT: u32 = 1u32 << 31;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Header {
@@ -259,13 +262,13 @@ impl Record {
         self.latch & 0xf000000
     }
     pub fn b29(&self) -> bool {
-        self.latch & (1 << 29) != 0
+        self.latch & POSITRON_BIT != 0
     }
     pub fn charged(&self) -> bool {
-        self.latch & (1 << 30) != 0
+        self.latch & (ELECTRON_BIT | POSITRON_BIT) != 0
     }
     pub fn crossed_multiple(&self) -> bool {
-        self.latch & (1 << 30) != 0
+        self.latch & NPASS_BIT != 0
     }
     pub fn get_weight(&self) -> f32 {
         self.weight.abs()

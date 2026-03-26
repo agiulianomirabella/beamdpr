@@ -37,6 +37,13 @@ fn main() {
                 .value_name("RECORDS")
                 .value_parser(value_parser!(String))
                 .default_value("10"))
+            .arg(Arg::new("particle")
+                .long("particle")
+                .short('p')
+                .value_name("PARTICLE")
+                .help("Filter record type inferred from latch IQ bits (30=electron, 29=positron)")
+                .value_parser(["all", "photon", "charged"])
+                .default_value("all"))
             .arg(Arg::new("input")
                 .value_name("FILE")
                 .value_parser(value_parser!(String))
@@ -243,11 +250,22 @@ fn main() {
             .unwrap()
             .map(|s| s.as_str())
             .collect();
+        let particle = sub_matches.get_one::<String>("particle").unwrap().as_str();
         let file = File::open(input_path).unwrap();
         let reader = PHSPReader::from(file).unwrap();
         let mut stdout = io::stdout().lock();
-        for record in reader.take(number) {
+        let mut printed = 0;
+        for record in reader {
             let r = record.unwrap();
+            let keep = match particle {
+                "all" => true,
+                "photon" => !r.charged(),
+                "charged" => r.charged(),
+                _ => unreachable!("invalid value parsed by clap"),
+            };
+            if !keep {
+                continue;
+            }
             stdout.write_all(&r.total_energy().to_le_bytes()).unwrap();
             stdout.write_all(&r.x_cm.to_le_bytes()).unwrap();
             stdout.write_all(&r.y_cm.to_le_bytes()).unwrap();
@@ -255,6 +273,10 @@ fn main() {
             stdout.write_all(&r.y_cos.to_le_bytes()).unwrap();
             stdout.write_all(&r.get_weight().to_le_bytes()).unwrap();
             stdout.write_all(&(r.latch as i32).to_le_bytes()).unwrap();
+            printed += 1;
+            if printed >= number {
+                break;
+            }
         }
         stdout.flush().unwrap();
         Ok(())
