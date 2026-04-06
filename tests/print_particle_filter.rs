@@ -32,6 +32,10 @@ fn latch_from_chunk(chunk: &[u8]) -> u32 {
     latch as u32
 }
 
+fn energy_from_chunk(chunk: &[u8]) -> f32 {
+    f32::from_le_bytes(chunk[0..4].try_into().unwrap())
+}
+
 fn write_mode0_phsp(path: &Path, latches: &[u32]) {
     let mut file = File::create(path).unwrap();
     file.write_all(b"MODE0").unwrap();
@@ -167,6 +171,84 @@ fn print_without_number_prints_all_matching_records() {
         "test_data/first.egsphsp1",
     ]);
     assert_eq!(out.len() / RECORD_BYTES, expected_charged);
+}
+
+#[test]
+fn print_max_energy_filters_records() {
+    let max_energy = 0.1f32;
+    let expected = PHSPReader::from(File::open(Path::new("test_data/first.egsphsp1")).unwrap())
+        .unwrap()
+        .map(|r| r.unwrap())
+        .filter(|r| r.total_energy() <= max_energy)
+        .count();
+
+    let out = run_print(&[
+        "print",
+        "--field",
+        "energy",
+        "x",
+        "y",
+        "x_cos",
+        "y_cos",
+        "weight",
+        "latch",
+        "--max-energy",
+        "0.1",
+        "test_data/first.egsphsp1",
+    ]);
+    assert_eq!(out.len() / RECORD_BYTES, expected);
+    for chunk in out.chunks_exact(RECORD_BYTES) {
+        let energy = energy_from_chunk(chunk);
+        assert!(
+            energy <= max_energy + f32::EPSILON,
+            "expected energy <= {max_energy}, got {energy}"
+        );
+    }
+}
+
+#[test]
+fn print_number_applies_after_particle_and_max_energy_filters() {
+    let limit = 17usize;
+    let max_energy = 0.1f32;
+    let matching = PHSPReader::from(File::open(Path::new("test_data/first.egsphsp1")).unwrap())
+        .unwrap()
+        .map(|r| r.unwrap())
+        .filter(|r| r.charged() && r.total_energy() <= max_energy)
+        .count();
+    let expected = matching.min(limit);
+
+    let out = run_print(&[
+        "print",
+        "--field",
+        "energy",
+        "x",
+        "y",
+        "x_cos",
+        "y_cos",
+        "weight",
+        "latch",
+        "--number",
+        "17",
+        "--particle",
+        "charged",
+        "--max-energy",
+        "0.1",
+        "test_data/first.egsphsp1",
+    ]);
+    assert_eq!(out.len() / RECORD_BYTES, expected);
+    for chunk in out.chunks_exact(RECORD_BYTES) {
+        let energy = energy_from_chunk(chunk);
+        assert!(
+            energy <= max_energy + f32::EPSILON,
+            "expected energy <= {max_energy}, got {energy}"
+        );
+        let latch = latch_from_chunk(chunk);
+        assert_ne!(
+            latch & CHARGED_MASK,
+            0,
+            "expected charged particle (charged bits set), latch={latch}"
+        );
+    }
 }
 
 #[test]

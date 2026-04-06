@@ -43,6 +43,11 @@ fn main() {
                 .help("Filter record type inferred from latch IQ bits (30=electron, 29=positron)")
                 .value_parser(["all", "photon", "charged"])
                 .default_value("all"))
+            .arg(Arg::new("max-energy")
+                .long("max-energy")
+                .value_name("MEV")
+                .help("Exclude records with energy greater than this value (MeV)")
+                .value_parser(value_parser!(f32)))
             .arg(Arg::new("input")
                 .value_name("FILE")
                 .value_parser(value_parser!(String))
@@ -246,6 +251,7 @@ fn main() {
             .map(|s| s.as_str())
             .collect();
         let particle = sub_matches.get_one::<String>("particle").unwrap().as_str();
+        let max_energy = sub_matches.get_one::<f32>("max-energy").copied();
         let file = File::open(input_path).unwrap();
         let reader = PHSPReader::from(file).unwrap();
         let mut stdout = io::stdout().lock();
@@ -264,7 +270,11 @@ fn main() {
             if !keep {
                 continue;
             }
-            stdout.write_all(&r.total_energy().to_le_bytes()).unwrap();
+            let energy = r.total_energy();
+            if max_energy.is_some_and(|max| energy > max) {
+                continue;
+            }
+            stdout.write_all(&energy.to_le_bytes()).unwrap();
             stdout.write_all(&r.x_cm.to_le_bytes()).unwrap();
             stdout.write_all(&r.y_cm.to_le_bytes()).unwrap();
             stdout.write_all(&r.x_cos.to_le_bytes()).unwrap();
