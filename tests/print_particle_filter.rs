@@ -144,6 +144,32 @@ fn print_number_applies_after_particle_filter() {
 }
 
 #[test]
+fn print_without_number_prints_all_matching_records() {
+    let expected_charged =
+        PHSPReader::from(File::open(Path::new("test_data/first.egsphsp1")).unwrap())
+            .unwrap()
+            .map(|r| r.unwrap())
+            .filter(|r| r.charged())
+            .count();
+
+    let out = run_print(&[
+        "print",
+        "--field",
+        "energy",
+        "x",
+        "y",
+        "x_cos",
+        "y_cos",
+        "weight",
+        "latch",
+        "--particle",
+        "charged",
+        "test_data/first.egsphsp1",
+    ]);
+    assert_eq!(out.len() / RECORD_BYTES, expected_charged);
+}
+
+#[test]
 fn print_particle_treats_positrons_as_charged() {
     let mut path = std::env::temp_dir();
     let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();

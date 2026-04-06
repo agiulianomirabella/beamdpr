@@ -35,8 +35,7 @@ fn main() {
                 .long("number")
                 .short('n')
                 .value_name("RECORDS")
-                .value_parser(value_parser!(String))
-                .default_value("10"))
+                .value_parser(value_parser!(usize)))
             .arg(Arg::new("particle")
                 .long("particle")
                 .short('p')
@@ -240,11 +239,7 @@ fn main() {
         // prints the fields specified?
         let sub_matches = matches.subcommand_matches("print").unwrap();
         let input_path = Path::new(sub_matches.get_one::<String>("input").unwrap());
-        let number = sub_matches
-            .get_one::<String>("number")
-            .unwrap()
-            .parse::<usize>()
-            .unwrap();
+        let number = sub_matches.get_one::<usize>("number").copied();
         let _fields: Vec<&str> = sub_matches
             .get_many::<String>("fields")
             .unwrap()
@@ -256,6 +251,9 @@ fn main() {
         let mut stdout = io::stdout().lock();
         let mut printed = 0;
         for record in reader {
+            if number.is_some_and(|n| printed >= n) {
+                break;
+            }
             let r = record.unwrap();
             let keep = match particle {
                 "all" => true,
@@ -274,9 +272,6 @@ fn main() {
             stdout.write_all(&r.get_weight().to_le_bytes()).unwrap();
             stdout.write_all(&(r.latch as i32).to_le_bytes()).unwrap();
             printed += 1;
-            if printed >= number {
-                break;
-            }
         }
         stdout.flush().unwrap();
         Ok(())
